@@ -1,21 +1,48 @@
-
+<!DOCTYPE HTML>
 <html>
 <head>
+<style>
 
+body {
+  margin: 0;
+  background: #0f172a;
+  overflow-x: hidden;
+}
+.wave {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 100%;
+  animation: wave 6s linear infinite;
+}
+.wave2 {
+  bottom: -20px;
+  animation-duration: 8s;
+  opacity: 0.5;
+}
+
+.wave3 {
+  bottom: -40px;
+  animation-duration: 10s;
+  opacity: 0.3;
+}
+
+@keyframes wave {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+</style>
 </head>
 <body>
-<h1>
-    If this works and you can read it awesome.
-</h1>
-    <p> message me from one of my accounts for recomendations on what to add.</p>
-</br>
-    <p>I will be adding to this every now and then though.</p>
-    <noscript>
-        If your seeing this it broke. 
-    </noscript>
+<div class="wave"></div>
+<div class="wave wave2"></div>
+<div class="wave wave3"></div>
 </body>
-
-
 </html>
-
-
