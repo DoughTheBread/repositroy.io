@@ -1,61 +1,72 @@
-<!DOCTYPE HTML>
+<!doctype html>
 <html>
 <head>
+<meta charset="utf-8"/>
+<title>3D Maze — Pickup Plays YouTube Audio</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
-
-body {
-  margin: 0;
-  background: #0f172a;
-  overflow-x: hidden;
-}
-.ellipses {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 120px;
-    height: 120px;
-    background-color: #e5e9f0;
-    border-radius: 50%;        
-    box-shadow: 0 0 20px #e5e9f0; 
-}
-.wave {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 200%;
-  height: 200px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 100%;
-  animation: wave 6s linear infinite;
-}
-.wave2 {
-  bottom: -20px;
-  animation-duration: 8s;
-  opacity: 0.5;
-}
-
-.wave3 {
-  bottom: -40px;
-  animation-duration: 10s;
-  opacity: 0.3;
-}
-
-@keyframes wave {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
+html,body{height:100%;margin:0;background:#000089;font-family:Arial,Helvetica,sans-serif;color:#fff}
+canvas{display:block}
+#hud{position:fixed;left:12px;top:12px;z-index:20;background:rgba(0,0,0,0.35);padding:8px 10px;border-radius:6px}
+#controls{position:fixed;left:12px;bottom:12px;z-index:20;background:rgba(0,0,0,0.35);padding:8px 10px;border-radius:6px;max-width:360px}
+#overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;background:rgba(0,0,0,0.45);z-index:19;cursor:pointer}
+#info{position:fixed;right:12px;top:12px;z-index:20;background:rgba(0,0,0,0.35);padding:8px 10px;border-radius:6px;font-size:13px}
+#jumpscare{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#000;color:#fff;z-index:30;font-size:48px;text-align:center}
+#jumpscare.show{display:flex}
+label{display:block;margin-bottom:6px;font-size:13px}
+input[type="text"]{width:220px;padding:6px;border-radius:4px;border:1px solid #444;background:#111;color:#fff}
+button{margin-left:6px;padding:6px 8px;border-radius:4px}
+.small{font-size:12px;color:#ddd;margin-top:6px}
+#pickupHint{position:fixed;left:50%;bottom:80px;transform:translateX(-50%);padding:6px 10px;background:rgba(0,0,0,0.5);color:#fff;border-radius:6px;z-index:25;display:none;font-size:14px}
+#speedDisplay{position:fixed;right:12px;bottom:12px;z-index:20;background:rgba(0,0,0,0.35);padding:8px 10px;border-radius:6px;font-size:13px}
+#yt-player-container{width:1px;height:1px;overflow:hidden;position:fixed;right:12px;bottom:140px;z-index:9999;opacity:0.01}
+#ytControls{position:fixed;right:12px;bottom:60px;z-index:40;background:rgba(0,0,0,0.45);padding:8px;border-radius:6px;color:#fff;font-family:Arial;display:flex;gap:8px;align-items:center}
+#staminaWrap{position:fixed;left:12px;top:64px;z-index:20;background:rgba(0,0,0,0.35);padding:6px;border-radius:6px;width:180px}
+#staminaBar{width:160px;height:12px;background:#333;border-radius:6px;overflow:hidden;margin-top:6px}
+#staminaFill{height:100%;width:100%;background:#4caf50}
+#staminaText{font-size:12px;color:#ddd;margin-top:4px}
 </style>
 </head>
 <body>
-    <div class="ellipses"></div>
-<div class="wave"></div>
-<div class="wave wave2"></div>
-<div class="wave wave3"></div>
-<h1> If you want me to add something message me.</h1>
-<p> I will be working on this more later to make it interactive.</p>
+<div id="hud"><b>Items:</b> <span id="items">0</span>/3</div>
+<div id="info">W A S D to move · Click to start · Press E to interact</div>
+
+<div id="controls">
+  <label for="enemyFile">Upload enemy image:</label>
+  <input id="enemyFile" name="enemyFile" type="file" accept="image/*" style="display:inline-block;margin-left:6px;">
+
+  <label for="enemyUrl" style="margin-top:8px;">Or image URL:</label>
+  <input id="enemyUrl" name="enemyUrl" type="text" placeholder="https://example.com/enemy.png" autocomplete="off" />
+  <button id="enemyUrlBtn" type="button">Apply</button>
+
+  <label for="ytUrlInput" style="margin-top:8px;">YouTube link or id (plays on pickup):</label>
+  <input id="ytUrlInput" name="ytUrlInput" type="text" placeholder="YouTube link or id (plays on pickup)" autocomplete="off" />
+  <button id="ytPlayBtn" type="button">Play Now</button>
+  <button id="ytStopBtn" type="button">Stop</button>
+
+  <div class="small" style="margin-top:8px;">Tip: CORS may block some external URLs. Upload works without a server.</div>
+</div>
+
+<div id="overlay">Click to start (pointer lock)</div>
+<div id="pickupHint">Press E to pick up</div>
+<div id="jumpscare">CAUGHT BY THE ENEMY<br><small style="font-size:18px">Click to restart</small></div>
+<div id="speedDisplay">Enemy speed: <span id="speedVal">0</span></div>
+
+<div id="staminaWrap">
+  <div style="font-size:13px">Stamina</div>
+  <div id="staminaBar"><div id="staminaFill"></div></div>
+  <div id="staminaText">100%</div>
+</div>
+
+<div id="yt-player-container"></div>
+
+<div id="ytControls" aria-hidden="false">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script>
+let scene,camera,renderer;let keys={};let yaw=0,pitch=0;let lastTime=performance.now();let enemyMesh=null;let gameOver=false;let walls=[];let doors=[];let items=[];let collected=0;let enemyBaseSpeed=1.2;let enemySpeedPerItem=0.6;let enemyMaxSpeed=6.0;let staminaMax=100;let stamina=staminaMax;let staminaDrainRate=22;let staminaRegenRate=18;let sprintMultiplier=1.8;let staminaExhausted=false;init();function init(){scene=new THREE.Scene();scene.background=new THREE.Color(0x000089);camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);camera.position.set(0,1.7,0);renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(window.devicePixelRatio||1);renderer.setSize(window.innerWidth,window.innerHeight);document.body.appendChild(renderer.domElement);addLights();buildLevel();addEnemy();addItems();setupControls();window.addEventListener('resize',onWindowResize);animate()}function addLights(){const ambient=new THREE.AmbientLight(0xffffff,1.0);scene.add(ambient);const dir=new THREE.DirectionalLight(0xffffff,0.6);dir.position.set(5,10,5);scene.add(dir)}function buildLevel(){const map=[[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,1,0,1,0,0,1,0,0,1,1,0,2,1],[1,0,1,0,1,0,0,1,0,0,1,1,0,0,1],[1,0,0,0,0,0,0,0,0,0,1,1,0,0,1],[1,0,1,1,1,0,1,1,1,0,1,1,0,0,1],[1,0,1,0,0,0,1,1,0,0,0,1,1,0,1],[1,0,1,1,1,0,0,1,0,0,0,1,1,0,1],[1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],[1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],[1,0,1,1,1,1,1,1,1,1,1,1,1,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]];const tileSize=3;const floorGeo=new THREE.PlaneGeometry(map[0].length*tileSize,map.length*tileSize);const floorMat=new THREE.MeshPhongMaterial({color:0x111111});const floor=new THREE.Mesh(floorGeo,floorMat);floor.rotation.x=-Math.PI/2;scene.add(floor);const wallGeo=new THREE.BoxGeometry(tileSize,3,tileSize);const invisible=new THREE.MeshBasicMaterial({visible:false});const wallMat=[new THREE.MeshPhongMaterial({color:0x222222}),new THREE.MeshPhongMaterial({color:0x222222}),invisible,new THREE.MeshPhongMaterial({color:0x222222}),new THREE.MeshPhongMaterial({color:0x222222}),new THREE.MeshPhongMaterial({color:0x222222})];const offsetX=-(map[0].length*tileSize)/2+tileSize/2;const offsetZ=-(map.length*tileSize)/2+tileSize/2;for(let z=0;z<map.length;z++){for(let x=0;x<map[0].length;x++){const cell=map[z][x];const worldX=offsetX+x*tileSize;const worldZ=offsetZ+z*tileSize;if(cell===1){const wall=new THREE.Mesh(wallGeo,wallMat);wall.position.set(worldX,1.5,worldZ);scene.add(wall);walls.push(wall)}else if(cell===2){const doorWidth=tileSize;const doorThickness=0.2;const doorHeight=2.6;const doorGeo=new THREE.BoxGeometry(doorWidth,doorHeight,doorThickness);const doorMat=new THREE.MeshPhongMaterial({color:0x884422});const door=new THREE.Mesh(doorGeo,doorMat);const pivot=new THREE.Object3D();pivot.position.set(worldX,0,worldZ);door.position.set(0,doorHeight/2,0);pivot.add(door);scene.add(pivot);doors.push({pivot,mesh:door,open:false,anim:0,animSpeed:3.0,worldX,worldZ})}}}camera.position.set(offsetX+1*tileSize,1.7,offsetZ+1*tileSize)}function addEnemy(){if(enemyMesh){if(enemyMesh.material&&enemyMesh.material.map)enemyMesh.material.map.dispose();enemyMesh.geometry?.dispose?.();scene.remove(enemyMesh);enemyMesh=null}const enemyGeo=new THREE.PlaneGeometry(2,3);const enemyMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,side:THREE.DoubleSide});enemyMesh=new THREE.Mesh(enemyGeo,enemyMat);enemyMesh.position.set(0,1.5,-5);scene.add(enemyMesh);const fileInput=document.getElementById('enemyFile');const urlInput=document.getElementById('enemyUrl');const urlBtn=document.getElementById('enemyUrlBtn');fileInput?.addEventListener('change',(ev)=>{const f=ev.target.files&&ev.target.files[0];if(!f)return;const reader=new FileReader();reader.onload=()=>setEnemyTexture(reader.result);reader.readAsDataURL(f);fileInput.value=''});urlBtn?.addEventListener('click',()=>{const url=urlInput.value.trim();if(!url)return;setEnemyTexture(url)})}function setEnemyTexture(src){if(!enemyMesh)return;const loader=new THREE.TextureLoader();loader.load(src,(tex)=>{tex.flipY=true;tex.encoding=THREE.sRGBEncoding;const mat=enemyMesh.material;if(mat.map)mat.map.dispose();mat.map=tex;mat.needsUpdate=true;const img=tex.image;if(img&&img.width&&img.height){const aspect=img.width/img.height;const height=3;enemyMesh.geometry.dispose();enemyMesh.geometry=new THREE.PlaneGeometry(height*aspect,height)}},undefined,(err)=>console.warn('Failed to load enemy texture:',err))}function addItems(){const positions=[[4,0,-6],[-6,0,4],[8,0,2]];const mat=new THREE.MeshStandardMaterial({color:0xffd700});positions.forEach(p=>{const s=new THREE.Mesh(new THREE.SphereGeometry(0.45,12,12),mat);s.position.set(p[0],0.45,p[2]);scene.add(s);items.push(s)});updateHUD()}function updateHUD(){document.getElementById('items').textContent=collected;const currentSpeed=Math.min(enemyMaxSpeed,enemyBaseSpeed+enemySpeedPerItem*collected);document.getElementById('speedVal').textContent=currentSpeed.toFixed(2);const pct=Math.round((stamina/staminaMax)*100);document.getElementById('staminaText').textContent=pct+'%';document.getElementById('staminaFill').style.width=Math.max(0,Math.min(100,(stamina/staminaMax)*100))+'%'}function setupControls(){document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='KeyE'){const doorToggled=toggleNearestDoor();if(!doorToggled){const picked=pickupNearestItem();if(picked){const url=document.getElementById('ytUrlInput').value.trim();if(url)playYouTubeAudio(url)}}}});document.addEventListener('keyup',e=>keys[e.code]=false);const overlay=document.getElementById('overlay');overlay.addEventListener('click',()=>{if(!gameOver)document.body.requestPointerLock()});document.addEventListener('mousemove',e=>{if(document.pointerLockElement===document.body&&!gameOver){const sensitivity=0.002;yaw-=e.movementX*sensitivity;pitch-=e.movementY*sensitivity;const limit=Math.PI/2-0.01;pitch=Math.max(-limit,Math.min(limit,pitch))}});document.addEventListener('pointerlockchange',()=>{const overlay=document.getElementById('overlay');if(document.pointerLockElement===document.body)overlay.style.display='none';else overlay.style.display='flex'});document.getElementById('ytPlayBtn').addEventListener('click',()=>{const url=document.getElementById('ytUrlInput').value.trim();if(url)playYouTubeAudio(url)});document.getElementById('ytStopBtn').addEventListener('click',()=>stopYouTubeAudio());const js=document.getElementById('jumpscare');js.addEventListener('click',()=>location.reload())}function toggleNearestDoor(){const playerPos=camera.position;let nearest=null;let nearestDist=Infinity;for(const d of doors){const dx=playerPos.x-d.worldX;const dz=playerPos.z-d.worldZ;const dist=Math.hypot(dx,dz);if(dist<4&&dist<nearestDist){nearest=d;nearestDist=dist}}if(nearest){nearest.open=!nearest.open;return true}return false}function pickupNearestItem(){if(!items||items.length===0)return false;const playerPos=camera.position;let nearestIndex=-1;let nearestDist=Infinity;const pickupRange=1.5;for(let i=0;i<items.length;i++){const it=items[i];const d=it.position.distanceTo(playerPos);if(d<pickupRange&&d<nearestDist){nearestDist=d;nearestIndex=i}}if(nearestIndex!==-1){const picked=items[nearestIndex];scene.remove(picked);picked.geometry?.dispose?.();picked.material?.dispose?.();items.splice(nearestIndex,1);collected++;updateHUD();if(collected>=3){const overlay=document.getElementById('overlay');overlay.style.display='flex';overlay.textContent='You Win! Click to restart';overlay.onclick=()=>location.reload();gameOver=true;document.exitPointerLock?.()}return true}return false}function updatePickupHint(){const hintEl=document.getElementById('pickupHint');const pickupRange=1.5;let near=false;for(const it of items){if(it.position.distanceTo(camera.position)<pickupRange){near=true;break}}hintEl.style.display=near?'block':'none'}function collides(pos){const playerRadius=0.4;for(const wall of walls){const dx=pos.x-wall.position.x;const dz=pos.z-wall.position.z;const distX=Math.abs(dx);const distZ=Math.abs(dz);const half=1.5;if(distX<half+playerRadius&&distZ<half+playerRadius)return true}for(const d of doors){if(d.anim<0.5){const dx=pos.x-d.worldX;const dz=pos.z-d.worldZ;const half=1.5;if(Math.abs(dx)<half+playerRadius&&Math.abs(dz)<half+playerRadius)return true}}return false}function updatePlayer(delta){camera.rotation.set(pitch,yaw,0);const baseSpeed=4;let isMoving=false;const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));const right=new THREE.Vector3().crossVectors(forward,new THREE.Vector3(0,1,0)).negate();let move=new THREE.Vector3();if(keys['KeyW']){move.add(forward);isMoving=true}if(keys['KeyS']){move.sub(forward);isMoving=true}if(keys['KeyA']){move.sub(right);isMoving=true}if(keys['KeyD']){move.add(right);isMoving=true}if(move.length()>0)move.normalize();let sprintKey=keys['ShiftLeft']||keys['ShiftRight'];let canSprint=sprintKey&&stamina>0&&!staminaExhausted&&isMoving;let speedMultiplier=canSprint? sprintMultiplier:1;let speed=baseSpeed*speedMultiplier*delta;let next=camera.position.clone().addScaledVector(move,speed);if(!collides(next))camera.position.copy(next);if(canSprint){stamina-=staminaDrainRate*delta;if(stamina<=0){stamina=0;staminaExhausted=true}}else{if(stamina<staminaMax){stamina+=staminaRegenRate*delta;if(stamina>staminaMax)stamina=staminaMax;if(stamina>staminaMax*0.25)staminaExhausted=false}}updateHUD()}function updateDoors(delta){for(const d of doors){const target=d.open?1:0;d.anim+=(target-d.anim)*Math.min(1,d.animSpeed*delta);const angle=-Math.PI/2*d.anim;d.pivot.rotation.y=angle}}function updateEnemy(delta){if(!enemyMesh)return;const enemyPos=enemyMesh.position;const playerPos=camera.position.clone();const dir=new THREE.Vector3().subVectors(playerPos,enemyPos);dir.y=0;const dist=dir.length();if(dist>0.001)dir.normalize();let currentSpeed=enemyBaseSpeed+enemySpeedPerItem*collected;if(currentSpeed>enemyMaxSpeed)currentSpeed=enemyMaxSpeed;enemyPos.addScaledVector(dir,currentSpeed*delta);enemyMesh.lookAt(playerPos.x,enemyPos.y,playerPos.z);if(dist<1.0&&!gameOver)triggerJumpscare()}function triggerJumpscare(){gameOver=true;const js=document.getElementById('jumpscare');js.classList.add('show');document.exitPointerLock?.()}function animate(){requestAnimationFrame(animate);const now=performance.now();const delta=(now-lastTime)/1000;lastTime=now;if(!gameOver){updatePlayer(delta);updateDoors(delta);updateEnemy(delta);updatePickupHint()}renderer.render(scene,camera)}function onWindowResize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight)}
+let ytPlayer=null;let ytApiReady=false;let fallbackIframe=null;(function loadYouTubeApi(){const s=document.createElement('script');s.src="https://www.youtube.com/iframe_api";s.async=true;document.head.appendChild(s)})();window.onYouTubeIframeAPIReady=function(){ytApiReady=true};function extractYouTubeId(urlOrId){if(!urlOrId)return null;urlOrId=urlOrId.trim();if(!urlOrId.includes('youtube')&&!urlOrId.includes('youtu.be')&&urlOrId.length<=20)return urlOrId;try{const u=new URL(urlOrId);if(u.hostname.includes('youtu.be'))return u.pathname.slice(1);if(u.searchParams.has('v'))return u.searchParams.get('v');const m=urlOrId.match(/[?&]v=([^&]+)/);if(m)return m[1];const short=urlOrId.match(/youtu\.be\/([^?&]+)/);if(short)return short[1];return null}catch(e){const m=urlOrId.match(/[?&]v=([^&]+)/);if(m)return m[1];const short=urlOrId.match(/youtu\.be\/([^?&]+)/);if(short)return short[1];return null}}function createYTPlayerWithAPI(id){try{const origin=window.location.origin||window.location.href;const vars={autoplay:1,controls:0,modestbranding:1,playsinline:1,rel:0,disablekb:1,origin:origin};if(!ytPlayer){ytPlayer=new YT.Player('yt-player-container',{height:'1',width:'1',videoId:id,playerVars:vars,events:{onReady:(e)=>{try{e.target.unMute?.();e.target.setVolume?.(100);e.target.playVideo?.()}catch{}}}})}else{ytPlayer.loadVideoById(id);try{ytPlayer.unMute?.();ytPlayer.setVolume?.(100);ytPlayer.playVideo?.()}catch{}}}catch(err){console.warn('YT API player creation failed',err)}}function createAutoplayIframe(id){if(fallbackIframe){fallbackIframe.remove();fallbackIframe=null}const container=document.getElementById('yt-player-container');const iframe=document.createElement('iframe');const originParam=encodeURIComponent(window.location.origin||window.location.href);iframe.src=`https://www.youtube.com/embed/${encodeURIComponent(id)}?autoplay=1&controls=0&rel=0&playsinline=1&enablejsapi=1&origin=${originParam}`;iframe.width="1";iframe.height="1";iframe.style.border="0";iframe.allow="autoplay; encrypted-media";container.appendChild(iframe);fallbackIframe=iframe}function playYouTubeAudio(urlOrId){const id=extractYouTubeId(urlOrId);if(!id){console.warn('Invalid YouTube URL or id');return}if(ytApiReady&&typeof YT!=='undefined'&&typeof YT.Player!=='undefined'){createYTPlayerWithAPI(id);return}createAutoplayIframe(id)}function stopYouTubeAudio(){try{if(ytPlayer){ytPlayer.stopVideo?.()}if(fallbackIframe){fallbackIframe.remove();fallbackIframe=null}}catch(e){console.warn(e)}}
+</script>
 </body>
 </html>
