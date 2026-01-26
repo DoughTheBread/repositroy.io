@@ -1,2 +1,2 @@
-# repositroy.io
+# repositroy
 Repositing
